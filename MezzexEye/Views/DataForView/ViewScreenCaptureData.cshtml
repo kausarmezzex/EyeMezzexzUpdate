@@ -1,0 +1,433 @@
+﻿    @model MezzexEye.Models.PaginatedScreenCaptureDataViewModel
+
+@{
+    ViewData["Title"] = "Screen Capture Data";
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var selectedDate = ViewBag.SelectedDate as string ?? today;
+    var isAdministrator = User.IsInRole("Administrator");
+}
+
+<h1 class="mb-4 text-center">Screen Capture Data</h1>
+
+<div class="mb-4 text-center">
+    <form id="filterForm" method="get" class="d-flex justify-content-center align-items-center flex-wrap">
+        @if (isAdministrator)
+        {
+            <div class="me-2 mt-3">
+                <label for="username" class="form-label me-2">Username:</label>
+                <select id="username" name="username" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var user in ViewBag.Usernames as List<string>)
+                    {
+                        @if (ViewBag.SelectedUsername == user)
+                        {
+                            <option value="@user" selected>@user</option>
+                        }
+                        else
+                        {
+                            <option value="@user">@user</option>
+                        }
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            <div class="me-2 mt-3">
+                <label for="username" class="form-label me-2">Username:</label>
+                <select id="username" name="username" class="form-select">
+                    @foreach (var user in ViewBag.Usernames as List<string>)
+                    {
+                        @if (ViewBag.SelectedUsername == user)
+                        {
+                            <option value="@user" selected>@user</option>
+                        }
+                        else
+                        {
+                            <option value="@user">@user</option>
+                        }
+                    }
+                </select>
+            </div>
+            <input type="hidden" name="username" value="@User.Identity.Name" />
+        }
+
+        <div class="me-2 mt-3">
+            <label for="date" class="form-label me-2">Date:</label>
+            <input type="date" id="date" name="date" class="form-control" value="@selectedDate">
+        </div>
+
+        <div class="me-2 mt-3">
+            <label for="taskName" class="form-label me-2">Task Name:</label>
+            <select id="taskName" name="taskName" class="form-select">
+                <option value="">All Tasks</option>
+                @foreach (var task in ViewBag.TaskNames as List<string>)
+                {
+                    @if (ViewBag.SelectedTaskName == task)
+                    {
+                        <option value="@task" selected>@task</option>
+                    }
+                    else
+                    {
+                        <option value="@task">@task</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="me-2 mt-3" style="display: none;">
+            <label for="mediaType" class="form-label me-2">Media Type:</label>
+            <select id="mediaType" name="mediaType" class="form-select">
+                <option value="image" selected>Image</option>
+            </select>
+        </div>
+
+        <div class="me-2 mt-5">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
+
+
+
+<div id="screenCaptureData">
+    @await Html.PartialAsync("_ScreenCaptureData", Model)
+</div>
+
+<!-- Image and Video Modal -->
+<!-- Image and Video Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h5 class="modal-title" id="imageModalLabel">Page <span id="modalPageNumber"></span>&nbsp; </h5>
+
+
+                    <div id="modalDetails" class="d-flex">
+                        <p class="me-3"><strong>User:</strong> <span id="modalUsername"></span></p>
+                        <p class="me-3"><strong>Created Time:</strong> <span id="modalTimestamp"></span></p>
+                        <p class="me-3"><strong>Task Name:</strong> <span id="modalTaskName"></span></p>
+                        <p><strong>Task Comment:</strong> <span id="modalComment"></span></p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center ms-3">
+                    <button id="pauseButton" class="btn btn-warning me-3 ms-3" style="display: none;">Pause</button>
+                    <button id="resumeButton" class="btn btn-success me-3" style="display: none;">Resume</button>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input me-3" type="checkbox" id="autoScrollToggle">
+                        <label class="form-check-label me-3" for="autoScrollToggle">Auto Scroll</label>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center position-relative">
+                <button type="button" class="btn btn-secondary position-absolute start-0 top-50 translate-middle-y" id="prevImage">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <img src="" alt="Full Screenshot" class="img-fluid" id="modalImage" style="display:none;">
+                <video src="" class="img-fluid" id="modalVideo" controls style="display:none;"></video>
+                <button type="button" class="btn btn-secondary position-absolute end-0 top-50 translate-middle-y" id="nextImage">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var allMedia = [];
+        var currentIndex = 0;
+        var currentPage = @Model.CurrentPage; // Keep track of the current page number
+        var totalPages = @Model.TotalPages; // Total pages available for pagination
+        var autoScrollInterval = null;
+        var isAutoScrollEnabled = false;
+
+        // Modal elements
+        var modalImage = document.getElementById('modalImage');
+        var modalVideo = document.getElementById('modalVideo');
+        var imageModal = document.getElementById('imageModal');
+        var pauseButton = document.getElementById('pauseButton');
+        var resumeButton = document.getElementById('resumeButton');
+        var autoScrollToggle = document.getElementById('autoScrollToggle');
+        var pageNumberElement = document.getElementById('modalPageNumber');
+
+        // Show the selected media (image or video) in the modal
+        function showMediaAtIndex(index) {
+            if (index >= allMedia.length) {
+                // Check if we are at the last media item and there are more pages to load
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadNextPageImages(function () {
+                        currentIndex = 0; // Reset index to 0 after loading next page
+                        showMediaAtIndex(currentIndex); // Continue showing the next media
+                    });
+                    return;
+                } else {
+                    currentIndex = 0; // Loop back to the first image if no more pages
+                }
+            }
+
+            var media = allMedia[index];
+            var mediaType = media.type;
+            var mediaUrl = media.url;
+
+            if (mediaType === 'img') {
+                modalImage.src = mediaUrl;
+                modalImage.style.display = 'block';
+                modalVideo.style.display = 'none';
+            } else {
+                modalVideo.src = mediaUrl;
+                modalVideo.style.display = 'block';
+                modalVideo.load();
+                modalImage.style.display = 'none';
+            }
+
+            updateModalDetails(media);
+            pageNumberElement.textContent = currentPage; // Update the modal's page number
+        }
+
+        // Function to update modal details (user, timestamp, taskname, comment)
+        function updateModalDetails(media) {
+            document.getElementById('modalUsername').textContent = media.username || "Unknown User";
+            document.getElementById('modalTimestamp').textContent = media.timestamp || "Unknown Time";
+            document.getElementById('modalTaskName').textContent = media.taskname || "No Running Task";
+            document.getElementById('modalComment').textContent = media.comment || "No Comment";
+        }
+
+        // Updated auto-scroll logic
+        function startAutoScroll() {
+            isAutoScrollEnabled = true;
+            autoScrollInterval = setInterval(function () {
+                currentIndex++;
+                if (currentIndex >= allMedia.length) {
+                    // If we've reached the end of the media, check if there's a next page
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        loadNextPageImages(function () {
+                            currentIndex = 0; // Reset index after loading next page
+                            showMediaAtIndex(currentIndex);
+                        });
+                    } else {
+                        currentIndex = 0; // Loop back to the first media if no more pages
+                        showMediaAtIndex(currentIndex);
+                    }
+                } else {
+                    showMediaAtIndex(currentIndex);
+                }
+            }, 2000); // Scroll every 2 seconds
+
+            pauseButton.style.display = 'inline-block';
+            resumeButton.style.display = 'none';
+        }
+
+        function stopAutoScroll() {
+            isAutoScrollEnabled = false;
+            clearInterval(autoScrollInterval);
+
+            pauseButton.style.display = 'none';
+            resumeButton.style.display = 'inline-block';
+        }
+
+        // Event listener for when the modal is shown
+        imageModal.addEventListener('show.bs.modal', function (event) {
+            allMedia = Array.from(document.querySelectorAll('[data-bs-img], [data-bs-video]')).map(el => ({
+                url: el.getAttribute(`data-bs-${el.hasAttribute('data-bs-img') ? 'img' : 'video'}`),
+                type: el.hasAttribute('data-bs-img') ? 'img' : 'video',
+                username: el.getAttribute('data-bs-username'),
+                timestamp: el.getAttribute('data-bs-timestamp'),
+                taskname: el.getAttribute('data-bs-taskname'),
+                comment: el.getAttribute('data-bs-comment')
+            }));
+
+            var button = event.relatedTarget; // The button that triggered the modal
+            currentIndex = allMedia.findIndex(media => media.url === button.getAttribute(`data-bs-${button.hasAttribute('data-bs-img') ? 'img' : 'video'}`));
+            showMediaAtIndex(currentIndex);
+        });
+
+        // Next and Previous buttons for media navigation
+        document.getElementById('nextImage').addEventListener('click', function () {
+            currentIndex++;
+            showMediaAtIndex(currentIndex);
+        });
+
+        document.getElementById('prevImage').addEventListener('click', function () {
+            currentIndex--;
+            if (currentIndex < 0) {
+                currentIndex = allMedia.length - 1;
+            }
+            showMediaAtIndex(currentIndex);
+        });
+
+        // Auto-scroll toggle
+        autoScrollToggle.addEventListener('change', function () {
+            if (this.checked) {
+                startAutoScroll();
+            } else {
+                stopAutoScroll();
+            }
+        });
+
+        // Pause and Resume buttons
+        pauseButton.addEventListener('click', stopAutoScroll);
+        resumeButton.addEventListener('click', startAutoScroll);
+
+        // Load the next page of images dynamically
+        function loadNextPageImages(callback) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', currentPage);
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.text())
+                .then(html => {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
+                    var newMediaElements = doc.querySelectorAll('[data-bs-img], [data-bs-video]');
+
+                    newMediaElements.forEach(el => {
+                        allMedia.push({
+                            url: el.getAttribute(`data-bs-${el.hasAttribute('data-bs-img') ? 'img' : 'video'}`),
+                            type: el.hasAttribute('data-bs-img') ? 'img' : 'video',
+                            username: el.getAttribute('data-bs-username'),
+                            timestamp: el.getAttribute('data-bs-timestamp'),
+                            taskname: el.getAttribute('data-bs-taskname'),
+                            comment: el.getAttribute('data-bs-comment')
+                        });
+                    });
+
+                    if (typeof callback === "function") {
+                        callback();
+                    }
+                })
+                .catch(error => console.error('Error loading next page images:', error));
+        }
+
+        // Attach pagination events (for handling next/previous page navigation)
+        function attachPaginationEvents() {
+            document.querySelectorAll('.pagination a[data-page]').forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    loadPage(page);
+                });
+            });
+
+            document.getElementById('prevPage').addEventListener('click', function (event) {
+                event.preventDefault();
+                const currentPage = parseInt(document.querySelector('.pagination .active a').getAttribute('data-page'));
+                if (currentPage > 1) {
+                    loadPage(currentPage - 1);
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', function (event) {
+                event.preventDefault();
+                const currentPage = parseInt(document.querySelector('.pagination .active a').getAttribute('data-page'));
+                if (currentPage < totalPages) {
+                    loadPage(currentPage + 1);
+                }
+            });
+        }
+
+            function loadPage(page, isAutoScroll = false) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', page);
+
+                // Retrieve current filter values from the form inputs
+                const username = document.getElementById('username')?.value || '';
+                const date = document.getElementById('date')?.value || '';
+                const taskName = document.getElementById('taskName')?.value || '';
+                const mediaType = document.getElementById('mediaType')?.value || 'Image';
+
+                // Set filter values in URL query parameters
+                url.searchParams.set('username', username);
+                url.searchParams.set('date', date);
+                url.searchParams.set('taskName', taskName);
+                url.searchParams.set('mediaType', mediaType);
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('screenCaptureData').innerHTML = html;
+                        attachPaginationEvents();
+                        attachModalEvents();
+
+                        currentPage = page;
+
+                        if (isAutoScroll && isAutoScrollEnabled) {
+                            allMedia = Array.from(document.querySelectorAll('[data-bs-img], [data-bs-video]'))
+                                .map(el => el.getAttribute(`data-bs-${el.hasAttribute('data-bs-img') ? 'img' : 'video'}`));
+                            if (currentIndex < allMedia.length) {
+                                showMediaAtIndex(currentIndex);
+                            } else {
+                                stopAutoScroll();
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error loading page:', error));
+            }
+
+    });
+
+
+</script>
+}
+<style>
+    .modal-lg {
+        max-width: 90%;
+    }
+
+    #modalDetails p {
+        margin: 0;
+    }
+
+    .modal-body {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .position-absolute {
+        z-index: 2;
+    }
+
+    .btn-secondary {
+        background-color: rgba(0, 0, 0, 0.5);
+        border: none;
+    }
+
+        .btn-secondary i {
+            color: white;
+        }
+
+    #filterForm label {
+        margin-bottom: 0;
+    }
+
+    #filterForm {
+        gap: 1rem;
+    }
+
+        #filterForm .form-label {
+            margin-bottom: 0.5rem;
+        }
+
+        #filterForm .form-select,
+        #filterForm .form-control,
+        #filterForm .btn {
+            margin-bottom: 0;
+        }
+
+    #modalDetails p {
+        margin: 0.5rem 0;
+    }
+</style>

@@ -1,0 +1,424 @@
+﻿@model EyeMezzexz.Models.UserAccountDetails
+
+@{
+    ViewData["Title"] = "Add User Account";
+}
+<style>
+    .mg-top {
+        margin-top: 1.2rem;
+    }
+
+    .control-label {
+        font-size: 0.775rem; /* Decrease font size */
+    }
+
+    .row > .col-md-2 {
+        flex: 1; /* Ensure equal distribution */
+    }
+
+    .dotted-border {
+        border: 2px dotted #007bff; /* Dotted blue border */
+        position: relative;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 10px; /* Optional: To soften the corners */
+    }
+
+        .dotted-border .form-title {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff; /* Match the background to hide the border */
+            padding: 0 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #007bff; /* Match the border color */
+        }
+</style>
+
+<form asp-action="Create" method="post" class="mt-4" enctype="multipart/form-data">
+    <input type="hidden" asp-for="UserId" />
+    <div class="dotted-border">
+        <div class="form-title">Add User Account</div>
+        <div class="row">
+            <!-- Company Name -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="CompanyName" class="control-label"></label>
+                    <select asp-for="CompanyName" class="form-control" asp-items="ViewBag.Companies">
+                        <option value="">-- Select Company --</option>
+                    </select>
+                    <span asp-validation-for="CompanyName" class="text-danger"></span>
+                </div>
+            </div>
+
+
+            <!-- Payroll Number -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="PayrollNumber" class="control-label"></label>
+                    <input asp-for="PayrollNumber" type="number" class="form-control" />
+                    <span asp-validation-for="PayrollNumber" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Employee Code -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="EmployeeCode" class="control-label"></label>
+                    <input asp-for="EmployeeCode" class="form-control" />
+                    <span asp-validation-for="EmployeeCode" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- First Name -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="control-label">First Name</label>
+                    <input type="text" class="form-control" value="@ViewBag.UserDetails.FirstName" readonly />
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Last Name -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="control-label">Last Name</label>
+                    <input type="text" class="form-control" value="@ViewBag.UserDetails.LastName" readonly />
+                </div>
+            </div>
+            <!-- Phone Number -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="control-label">Phone Number</label>
+                    <input type="text" class="form-control" value="@ViewBag.UserDetails.PhoneNumber" readonly />
+                </div>
+            </div>
+            <!-- Email -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="control-label">Email</label>
+                    <input type="email" class="form-control" value="@ViewBag.UserDetails.Email" readonly />
+                </div>
+            </div>
+            <!-- Joining Date -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="JoiningDate" class="control-label"></label>
+                    <input asp-for="JoiningDate" type="date" class="form-control" />
+                    <span asp-validation-for="JoiningDate" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Address -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Address" class="control-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+            </div>
+            <!-- Zipcode -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Zipcode" class="control-label"></label>
+                    <input asp-for="Zipcode" class="form-control" />
+                    <span asp-validation-for="Zipcode" class="text-danger"></span>
+                </div>
+            </div>
+            <!-- Extra Info -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="ExtraInfo" class="control-label"></label>
+                    <textarea asp-for="ExtraInfo" rows="1" class="form-control"></textarea>
+                    <span asp-validation-for="ExtraInfo" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="HolidayDaysYearly" class="control-label"></label>
+                    <input asp-for="HolidayDaysYearly" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="HolidayDaysYearly" class="text-danger"></span>
+                </div>
+            </div>
+           
+        </div>
+
+        <div class="row">
+            <!-- Country Name -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="control-label">Country</label>
+                    <input type="text" class="form-control" value="@ViewBag.UserDetails.CountryName" readonly id="country-select" />
+                </div>
+            </div>
+           
+            <!-- Agreement Type -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="AgreementType" class="control-label">Agreement Type</label>
+                    <select asp-for="AgreementType" class="form-control" asp-items="ViewBag.AgreementTypes">
+                        <option value="">-- Select Agreement Type --</option>
+                    </select>
+                    <span asp-validation-for="AgreementType" class="text-danger"></span>
+                </div>
+            </div>
+          @*   <!-- Authentic Leave -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="AuthenticLeave" class="control-label"></label>
+                    <input asp-for="AuthenticLeave" type="number" class="form-control" />
+                    <span asp-validation-for="AuthenticLeave" class="text-danger"></span>
+                </div>
+            </div> *@
+            
+            <!-- NINumber -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="NINumber" class="control-label"></label>
+                    <input asp-for="NINumber" class="form-control" />
+                    <span asp-validation-for="NINumber" class="text-danger"></span>
+                </div>
+            </div>
+            <!-- Holiday Hours Yearly -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="HolidayHoursYearly" class="control-label"></label>
+                    <input asp-for="HolidayHoursYearly" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="HolidayHoursYearly" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="conditional-fields-us" style="display: none;">
+            <div class="row">
+                <!-- Payroll Hours -->
+                <div class="col-md-2 payroll-fields">
+                    <div class="form-group">
+                        <label asp-for="PayrollHours" class="control-label"></label>
+                        <input asp-for="PayrollHours" type="number" class="form-control" />
+                        <span asp-validation-for="PayrollHours" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Payroll Hours Rate -->
+                <div class="col-md-2 payroll-fields">
+                    <div class="form-group">
+                        <label asp-for="PayrollHoursRate" class="control-label"></label>
+                        <input asp-for="PayrollHoursRate" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="PayrollHoursRate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Cash Hours -->
+                <div class="col-md-2 cash-fields">
+                    <div class="form-group">
+                        <label asp-for="CashHours" class="control-label"></label>
+                        <input asp-for="CashHours" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="CashHours" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Cash Hours Rate -->
+                <div class="col-md-2 cash-fields">
+                    <div class="form-group">
+                        <label asp-for="CashHoursRate" class="control-label"></label>
+                        <input asp-for="CashHoursRate" type="number" step="0.01" class="form-control" />
+                        <span asp-validation-for="CashHoursRate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Agreed Hours -->
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label asp-for="AgreedHours" class="control-label"></label>
+                        <input asp-for="AgreedHours" type="number" class="form-control" />
+                        <span asp-validation-for="AgreedHours" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row align-items-center">
+            <!-- Is Manager -->
+            <div class="col-md-2">
+                <div class="form-group form-check">
+                    <input asp-for="IsManager" type="checkbox" class="form-check-input" />
+                    <label asp-for="IsManager" class="form-check-label">Is Manager</label>
+                </div>
+            </div>
+
+            <!-- Is Fixed Salary -->
+            <div class="col-md-2 ">
+                <div class="form-group form-check">
+                    <input asp-for="IsFixedSalary" type="checkbox" class="form-check-input" id="is-fixed-salary" />
+                    <label asp-for="IsFixedSalary" class="form-check-label">Is Fixed Salary</label>
+                </div>
+            </div>
+
+            <!-- Fixed Salary Amount -->
+            <div id="fixed-salary-amount" class="col-md-2" style="display: none;">
+                <div class="form-group">
+                    <label asp-for="FixedSalaryAmount" class="control-label"></label>
+                    <input asp-for="FixedSalaryAmount" type="number" class="form-control" />
+                    <span asp-validation-for="FixedSalaryAmount" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Is PayBack -->
+            <div class="col-md-2 m">
+                <div class="form-group form-check">
+                    <input asp-for="IsPayBack" type="checkbox" class="form-check-input" id="is-payback" />
+                    <label asp-for="IsPayBack" class="form-check-label">Is PayBack</label>
+                </div>
+            </div>
+
+            <!-- PayBack To -->
+            <div id="payback-fields" class="col-md-2" style="display: none;">
+                <div class="form-group">
+                    <label asp-for="PayBackTo" class="control-label"></label>
+                    <select asp-for="PayBackTo" class="form-control" asp-items="ViewBag.Users">
+                        <option value="">-- Select User --</option>
+                    </select>
+                    <span asp-validation-for="PayBackTo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- PayBack Amount -->
+            <div id="payback-fields-amount" class="col-md-2" style="display: none;">
+                <div class="form-group">
+                    <label asp-for="PayBackAmount" class="control-label"></label>
+                    <input asp-for="PayBackAmount" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="PayBackAmount" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="dotted-border">
+        <div class="form-title">Document Details</div>
+        <div class="row gy-3">
+            <!-- Contract Start Date -->
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label asp-for="ContractStartDate" class="control-label">Contract Start Date</label>
+                    <input asp-for="ContractStartDate" type="date" class="form-control" />
+                    <span asp-validation-for="ContractStartDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Contract End Date -->
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label asp-for="ContractEndDate" class="control-label">Contract End Date</label>
+                    <input asp-for="ContractEndDate" type="date" class="form-control" />
+                    <span asp-validation-for="ContractEndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Document Upload -->
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label for="documents" class="control-label">Upload Documents</label>
+                    <input type="file" id="documents" name="documents" class="form-control" multiple />
+                </div>
+            </div>
+
+            <!-- Document Name -->
+            <div class="col-lg-3">
+                <div class="form-group">
+                    <label asp-for="DocumentNames" class="control-label">Document Name(s)</label>
+                    <textarea asp-for="DocumentNames" rows="1" class="form-control" placeholder="Enter document names, one per line"></textarea>
+                    <span asp-validation-for="DocumentNames" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Submit and Cancel Buttons -->
+    <div class="row mt-4 mb-4">
+        <div class="col-md-12 text-center">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Function to handle showing/hiding the Fixed Salary field
+            function toggleFixedSalaryField() {
+                if ($('#is-fixed-salary').is(':checked')) {
+                    $('#fixed-salary-amount').show();
+                } else {
+                    $('#fixed-salary-amount').hide();
+                }
+            }
+             // Handle initial state for "India"
+            if ($('#country-select').val() === "India") {
+                $('#is-fixed-salary').prop('checked', true); // Automatically check the checkbox
+                $('#is-fixed-salary').prop('disabled', true); // Disable the checkbox to prevent unchecking
+            } else {
+                $('#is-fixed-salary').prop('disabled', false); // Ensure checkbox is editable for other countries
+            }
+            // Function to handle showing/hiding PayBack fields
+            function togglePayBackFields() {
+                if ($('#is-payback').is(':checked')) {
+                    $('#payback-fields').show();
+                    $('#payback-fields-amount').show();
+                } else {
+                    $('#payback-fields').hide();
+                    $('#payback-fields-amount').hide();
+                }
+            }
+
+            // Function to toggle fields based on the selected country
+            function toggleCountryFields() {
+                if ($('#country-select').val() === "United Kingdom") {
+                    $('#conditional-fields-us').show();
+                } else {
+                    $('#conditional-fields-us').hide();
+                }
+            }
+
+            // Function to toggle agreement type fields
+            function toggleAgreementTypeFields() {
+                const agreementType = $('#AgreementType').val();
+
+                // Hide fields by default
+                $('.cash-fields').hide();
+                $('.payroll-fields').hide();
+
+                // Show fields based on selected agreement type
+                if (agreementType === "Cash") {
+                    $('.cash-fields').show();
+                } else if (agreementType === "Payroll") {
+                    $('.payroll-fields').show();
+                } else if (agreementType === "Cash+Payroll") {
+                    $('.cash-fields').show();
+                    $('.payroll-fields').show();
+                }
+            }
+
+            // Initialize visibility based on initial states
+            toggleFixedSalaryField();
+            togglePayBackFields();
+            toggleCountryFields();
+            toggleAgreementTypeFields();
+
+            // Bind events for dynamic changes
+            $('#is-fixed-salary').change(toggleFixedSalaryField);
+            $('#is-payback').change(togglePayBackFields);
+            $('#country-select').change(toggleCountryFields);
+            $('#AgreementType').change(toggleAgreementTypeFields);
+        });
+    </script>
+}
+
+
+

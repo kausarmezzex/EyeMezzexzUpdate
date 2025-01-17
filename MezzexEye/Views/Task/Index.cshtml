@@ -1,0 +1,217 @@
+﻿@model IEnumerable<EyeMezzexz.Models.TaskNames>
+
+@{
+    ViewData["Title"] = "All Tasks";
+    int totalTasks = ViewBag.TotalTasks;
+    int pageSize = ViewBag.PageSize;
+    int currentPage = ViewBag.CurrentPage;
+}
+<style>
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.875rem;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+</style>
+<div class="container">
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-3">
+            <label for="countrySelect" class="mb-2">Filter by Country</label>
+            <select class="form-control" id="countrySelect" name="countrySelect">
+                <option value="">[All]</option>
+                @foreach (var country in ViewBag.Countries)
+                {
+                    <option value="@country.Value">@country.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="searchBox" class="mb-2">Search</label>
+            <input type="text" class="form-control" id="searchBox" placeholder="Search tasks">
+        </div>
+        <div class="col-md-4 text-right">
+            <a asp-action="Create" class="btn btn-primary mt-4">Create New Task</a>
+        </div>
+    </div>
+
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Computer Required</th>
+                    <th>Created On</th>
+                    <th>Created By</th>
+                    <th>Target Quantity</th> <!-- Added this column for TargetQuantity -->
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="taskList">
+                @foreach (var item in Model)
+                {
+                    <tr data-country-id="@item.CountryId" data-task-id="@item.Id">
+                        <td>
+                            @item.Name
+                            @if (item.SubTasks.Any())
+                            {
+                                <button class="btn btn-link toggle-button" type="button" data-task-id="@item.Id">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            }
+                        </td>
+                        <td>@item.Country?.Name ?? "N/A"</td>
+                        <td>@(item.ComputerRequired.HasValue && item.ComputerRequired.Value ? "Yes" : "No")</td>
+                        <td>@(item.TaskCreatedOn?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                        <td>@item.TaskCreatedBy ?? "N/A"</td>
+                        <td>@(item.TargetQuantity.HasValue ? item.TargetQuantity.ToString() : "N/A")</td> <!-- Display TargetQuantity here -->
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-secondary">Edit</a>
+                        </td>
+                    </tr>
+
+                    @if (item.SubTasks.Any())
+                    {
+                        @foreach (var subTask in item.SubTasks)
+                        {
+                            <tr class="sub-task collapse" data-parent-task-id="@item.Id">
+                                <td class="pl-4">&#8627; @subTask.Name</td>
+                                <td>@subTask.Country?.Name ?? "N/A"</td>
+                                <td>@(subTask.ComputerRequired.HasValue && subTask.ComputerRequired.Value ? "Yes" : "No")</td>
+                                <td>@(subTask.TaskCreatedOn?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                                <td>@subTask.TaskCreatedBy ?? "N/A"</td>
+                                <td>@(subTask.TargetQuantity.HasValue ? subTask.TargetQuantity.ToString() : "N/A")</td> <!-- Display TargetQuantity for subtasks -->
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@subTask.Id" class="btn btn-secondary">Edit</a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-container">
+        <ul id="pagination" class="pagination justify-content-center"></ul>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentPage = @currentPage;
+        const pageSize = @pageSize;
+
+        async function fetchTasks(page = 1, search = '') {
+            currentPage = page; // Set the current page
+            const selectedCountryId = document.getElementById("countrySelect").value;
+            const response = await fetch(`/Task/Index?countryId=${selectedCountryId}&page=${page}&pageSize=${pageSize}&search=${search}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                renderTasks(data.tasks);
+                renderPagination(data.totalTasks, page);
+            } else {
+                console.error('Failed to load tasks:', response.statusText);
+            }
+        }
+
+        function renderTasks(tasks) {
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = '';
+
+            tasks.forEach(function (task) {
+                let createdOn = task.taskCreatedOn ? new Date(task.taskCreatedOn).toLocaleDateString() : 'N/A';
+                let row = `<tr data-country-id="${task.countryId}" data-task-id="${task.id}">
+                                                    <td>
+                                                        ${task.name}
+                                                        ${task.subTasks.length > 0 ? `<button class="btn btn-link toggle-button" type="button" data-task-id="${task.id}"><i class="fas fa-plus"></i></button>` : ''}
+                                                    </td>
+                                                    <td>${task.country ? task.country.name : 'N/A'}</td>
+                                                    <td>${task.computerRequired !== null ? (task.computerRequired ? 'Yes' : 'No') : 'N/A'}</td>
+                                                    <td>${createdOn}</td>
+                                                    <td>${task.taskCreatedBy ?? 'N/A'}</td>
+                                                    <td>${task.targetQuantity !== null ? task.targetQuantity : 'N/A'}</td> <!-- Show TargetQuantity -->
+                                                    <td><a href="/Task/Edit/${task.id}" class="btn btn-secondary">Edit</a></td>
+                                                </tr>`;
+
+                if (task.subTasks && task.subTasks.length > 0) {
+                    task.subTasks.forEach(function (subTask) {
+                        let subCreatedOn = subTask.taskCreatedOn ? new Date(subTask.taskCreatedOn).toLocaleDateString() : 'N/A';
+                        row += `<tr class="sub-task collapse" data-parent-task-id="${task.id}">
+                                                            <td class="pl-4">&#8627; ${subTask.name}</td>
+                                                            <td>${subTask.country ? subTask.country.name : 'N/A'}</td>
+                                                            <td>${subTask.computerRequired !== null ? (subTask.computerRequired ? 'Yes' : 'No') : 'N/A'}</td>
+                                                            <td>${subCreatedOn}</td>
+                                                            <td>${subTask.taskCreatedBy ?? 'N/A'}</td>
+                                                            <td>${subTask.targetQuantity !== null ? subTask.targetQuantity : 'N/A'}</td> <!-- Show TargetQuantity for subtasks -->
+                                                            <td><a href="/Task/Edit/${subTask.id}" class="btn btn-secondary">Edit</a></td>
+                                                        </tr>`;
+                    });
+                }
+
+                taskList.innerHTML += row;
+            });
+
+            // Attach event listener for toggle buttons
+            document.querySelectorAll('.toggle-button').forEach(button => {
+                button.addEventListener('click', function () {
+                    const taskId = this.getAttribute('data-task-id');
+                    const targetRows = document.querySelectorAll(`.sub-task[data-parent-task-id="${taskId}"]`);
+                    targetRows.forEach(row => {
+                        row.classList.toggle('show');
+                    });
+                    const icon = this.querySelector('i');
+                    if (targetRows[0].classList.contains('show')) {
+                        icon.classList.remove('fa-plus');
+                        icon.classList.add('fa-minus');
+                    } else {
+                        icon.classList.remove('fa-minus');
+                        icon.classList.add('fa-plus');
+                    }
+                });
+            });
+        }
+
+        function renderPagination(totalTasks, currentPage) {
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(totalTasks / pageSize);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.className = "page-item";
+                if (i === currentPage) {
+                    li.classList.add("active");
+                }
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchTasks(i);
+                });
+                pagination.appendChild(li);
+            }
+        }
+
+        document.getElementById("countrySelect").addEventListener("change", () => fetchTasks(1));
+        document.getElementById("searchBox").addEventListener("input", (e) => fetchTasks(1, e.target.value));
+
+        // Initial fetch on page load
+        fetchTasks(currentPage);
+    </script>
+}

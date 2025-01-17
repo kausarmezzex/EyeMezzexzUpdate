@@ -1,0 +1,139 @@
+﻿@model EyeMezzexz.Models.TaskNames
+
+@{
+    ViewData["Title"] = "Edit Task";
+    var isUs = Model.CountryId == 2; // Assuming '2' is the ID for the United States
+}
+
+<style>
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.875rem;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+</style>
+
+<form asp-action="Edit" method="post" class="needs-validation" novalidate>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" required />
+        <div class="invalid-feedback">
+            Please enter a name.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ParentTaskId" class="form-label">Parent Task</label>
+        <select asp-for="ParentTaskId" class="form-select">
+            <option value="">[None]</option>
+            @foreach (var task in (IEnumerable<SelectListItem>)ViewBag.Tasks)
+            {
+                <option value="@task.Value" selected="@(task.Selected ? "selected" : null)">@task.Text</option>
+            }
+        </select>
+    </div>
+
+    <!-- ComputerRequired section (only shown if the country is United States) -->
+    <div class="mb-3" id="computerRequiredGroup" style="display: none;">
+        <div class="form-check">
+            <!-- Convert nullable boolean to non-nullable for checkbox -->
+            <input type="checkbox" class="form-check-input" id="ComputerRequired" name="ComputerRequired" style="display: @(Model.ComputerRequired.HasValue && Model.ComputerRequired.Value ? "block" : "none")"
+                   value="true" @(Model.ComputerRequired.HasValue && Model.ComputerRequired.Value ? "checked" : "") />
+            <input type="hidden" name="ComputerRequired" value="false" />
+            <label asp-for="ComputerRequired" class="form-check-label">Computer Required</label>
+        </div>
+    </div>
+
+
+    <div class="mb-3" id="targetQuantityGroup" style="display: none;">
+        <label asp-for="TargetQuantity" class="form-label">Target Quantity</label>
+        <input asp-for="TargetQuantity" class="form-control" id="TargetQuantity" type="number" min="1" />
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="IsDeleted" name="IsDeleted"
+                   value="true" @(Model.IsDeleted ?? false ? "checked" : "") />
+            <input type="hidden" name="IsDeleted" value="false" />
+            <label asp-for="IsDeleted" class="form-check-label">Mark as Deleted</label>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CountryId" class="form-label">Country</label>
+        <select asp-for="CountryId" class="form-select" id="countrySelect">
+            @foreach (var country in (IEnumerable<SelectListItem>)ViewBag.Countries)
+            {
+                <option value="@country.Value" selected="@(country.Selected ? "selected" : null)">@country.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="TaskCreatedBy" class="form-label">Created By</label>
+        <input asp-for="TaskCreatedBy" class="form-control" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="TaskCreatedOn" class="form-label">Created On</label>
+        <input asp-for="TaskCreatedOn" class="form-control" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="SubTasks" class="form-label">Sub Tasks</label>
+        <ul>
+            @foreach (var subTask in Model.SubTasks)
+            {
+                <li>@subTask.Name</li>
+            }
+        </ul>
+    </div>
+
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CountryId" />
+
+    <div class="mb-3">
+        <input type="submit" value="Save" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.getElementById("countrySelect").addEventListener("change", function () {
+            var selectedCountry = this.options[this.selectedIndex].text;
+            var computerRequiredGroup = document.getElementById("computerRequiredGroup");
+            if (selectedCountry === "United Kingdom") {
+                computerRequiredGroup.style.display = "block";
+            } else {
+                computerRequiredGroup.style.display = "none";
+                document.getElementById("ComputerRequired").checked = false;
+                document.getElementById("targetQuantityGroup").style.display = "none";
+            }
+        });
+
+        // Show "Target Quantity" based on "Computer Required" checkbox
+        document.getElementById("ComputerRequired").addEventListener("change", function () {
+            var targetQuantityGroup = document.getElementById("targetQuantityGroup");
+
+            if (this.checked) {
+                targetQuantityGroup.style.display = "block";
+            } else {
+                targetQuantityGroup.style.display = "none";
+            }
+        });
+
+        // Trigger the change event on page load to handle pre-selected value
+        document.getElementById("countrySelect").dispatchEvent(new Event('change'));
+    </script>
+}

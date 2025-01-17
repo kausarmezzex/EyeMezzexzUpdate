@@ -1,0 +1,144 @@
+﻿@model EyeMezzexz.Models.RunningTasksViewModel
+@{
+    ViewData["Title"] = "All Running Task";
+  
+}
+<style>
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.875rem;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+</style>
+<link rel="stylesheet" href="~/CSS/ViewAllRunningtask.css">
+<div class="container py-4 bg-light rounded">
+    <!-- Header Section with Statistics -->
+    <div class="card border-0 shadow-sm p-3 mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                <h5 class="fw-bold text-primary">Dashboard Overview</h5>
+                <p class="text-muted mb-1 small">Quick view of running tasks and user activity.</p>
+            </div>
+            <div class="col-md-6 d-flex justify-content-around">
+                <!-- Running Tasks Box -->
+                <div class="stat-box p-2 bg-success text-white rounded shadow-sm text-center me-2">
+                    <div class="stat-value h5 mb-0 fw-bold">@Model.TotalRunningTasks</div>
+                    <small>Total Running Tasks</small>
+                </div>
+                <!-- Users Not Started Tasks Box -->
+                <div class="stat-box p-2 bg-warning text-white rounded shadow-sm text-center">
+                    <div class="stat-value h5 mb-0 fw-bold">@ViewBag.UsersNotStartTask</div>
+                    <small>Users Not Started Tasks</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details of Running Tasks Section -->
+    <div class="card border-0 rounded-lg shadow-sm">
+        <div class="card-body">
+
+            <!-- Search Box and Export Button -->
+            <div class="d-flex mb-3 justify-content-between">
+                <input type="text" id="searchBox" class="form-control w-75 me-2" placeholder="Search tasks...">
+                <button id="exportButton" class="btn btn-outline-secondary">
+                    <i class="fas fa-file-excel me-1"></i> Export to Excel
+                </button>
+            </div>
+
+            <!-- Responsive Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="taskTable">
+                    <thead class="table-light">
+                        <tr>
+                            
+                            <th scope="col" onclick="sortTable(1)">User Name <i class="fas fa-sort"></i></th>
+                            <th scope="col" onclick="sortTable(2)">Start Time <i class="fas fa-sort"></i></th>
+                            <th scope="col" onclick="sortTable(0)">Task Name <i class="fas fa-sort"></i></th>
+                            <th scope="col" onclick="sortTable(3)">Comment</th>
+                            <th scope="col" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in Model.AllRunningTasks)
+                        {
+                            <tr>
+                              
+                                <td>@task.UserName</td>
+                                <td>@task.TaskStartTime</td>
+                                <td>@task.TaskName</td>
+                                <td>@task.TaskComment</td>
+                                <td class="text-center">
+                                    <a asp-controller="DataForView" asp-action="ViewScreenCaptureData" asp-route-username="@task.UserName" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i> Show Screen
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+
+<script>
+    // Search functionality
+    document.getElementById('searchBox').addEventListener('keyup', function() {
+        var filter = this.value.toUpperCase();
+        var rows = document.querySelector("#taskTable tbody").rows;
+
+        for (var i = 0; i < rows.length; i++) {
+            var cells = rows[i].cells;
+            var match = false;
+            for (var j = 0; j < cells.length - 1; j++) { // Exclude the action column
+                if (cells[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+            rows[i].style.display = match ? "" : "none";
+        }
+    });
+
+    // Sorting functionality
+    function sortTable(n) {
+        var table = document.getElementById("taskTable");
+        var rows = Array.from(table.rows).slice(1); // Exclude header row
+        var asc = table.rows[0].cells[n].classList.toggle('asc');
+
+        rows.sort(function (rowA, rowB) {
+            var cellA = rowA.cells[n].textContent.trim();
+            var cellB = rowB.cells[n].textContent.trim();
+
+            if (!isNaN(Date.parse(cellA)) && !isNaN(Date.parse(cellB))) {
+                return asc ? Date.parse(cellA) - Date.parse(cellB) : Date.parse(cellB) - Date.parse(cellA);
+            }
+
+            return asc ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+        });
+
+        rows.forEach(row => table.appendChild(row));
+    }
+
+    // Export to Excel functionality
+    document.getElementById('exportButton').addEventListener('click', function() {
+        let table = document.getElementById('taskTable');
+        let rows = Array.from(table.rows);
+        rows.forEach(row => row.deleteCell(4)); // Remove the "Action" column for export
+        let wb = XLSX.utils.table_to_book(table);
+        XLSX.writeFile(wb, 'RunningTasks.xlsx');
+    });
+</script>

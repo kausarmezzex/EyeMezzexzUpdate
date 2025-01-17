@@ -1,0 +1,73 @@
+﻿@model IEnumerable<MezzexEye.ViewModel.UserViewModel>
+
+@{
+    ViewBag.Title = "All Users";
+}
+
+
+<!-- Universal Search Form -->
+<form id="searchForm" class="row mb-3">
+    <div class="col-md-10">
+        <input type="text" name="searchValue" id="searchValue" class="form-control" placeholder="Search by name, email, phone, or country" />
+    </div>
+    <div class="col-md-2">
+        <button type="button" id="searchButton" class="btn btn-primary btn-block">Search</button>
+    </div>
+</form>
+
+<!-- Export to Excel Button -->
+<div class="row mb-3">
+    <div class="col-md-6 text-left">
+        <a href="@Url.Action("ExportToExcel", "Account")" class="btn btn-success">Export to Excel</a>
+    </div>
+    <div class="col-md-6 text-right">
+        <a href="@Url.Action("Register", "Account")" class="btn btn-success">Add User</a>
+    </div>
+</div>
+
+
+
+<!-- User Table -->
+<div id="userTable">
+    @await Html.PartialAsync("_UserTable", Model)
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Function to fetch and update the user table using AJAX
+            function fetchUsers(searchValue, sortBy) {
+                $.ajax({
+                    url: '@Url.Action("AllUsers", "Account")',
+                    type: 'GET',
+                    data: {
+                        searchValue: searchValue,
+                        sortBy: sortBy
+                    },
+                    success: function (result) {
+                        $('#userTable').html(result);
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Status: " + status);
+                        console.log("Error: " + error);
+                        console.log("Response: " + xhr.responseText);
+                        alert('Error loading data: ' + error);
+                    }
+                });
+            }
+
+            // Search button click event
+            $('#searchButton').click(function () {
+                var searchValue = $('#searchValue').val();
+                fetchUsers(searchValue, null);  // Trigger AJAX fetch with search parameters
+            });
+
+            // Sorting click event
+            $(document).on('click', '.sort', function () {
+                var sortBy = $(this).data('sort-by');
+                fetchUsers(null, sortBy);  // Trigger AJAX fetch with sort parameter
+            });
+        });
+    </script>
+}

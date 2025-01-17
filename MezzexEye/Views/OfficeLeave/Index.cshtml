@@ -1,0 +1,223 @@
+﻿@model IEnumerable<EyeMezzexz.Models.OfficeLeave>
+
+@{
+    ViewData["Title"] = "Office Leaves";
+}
+
+<!-- Filter Section -->
+<form id="filterForm" method="get" class="mb-4">
+    <div class="row">
+        <div class="col-md-3">
+            <label>Country:</label>
+            <select name="countryName" class="form-control filter-input">
+                <option value="">-- All Countries --</option>
+                @if (ViewData["CountryName"] as string == "India")
+                {
+                    <option value="India" selected>India</option>
+                }
+                else
+                {
+                    <option value="India">India</option>
+                }
+
+                @if (ViewData["CountryName"] as string == "UK")
+                {
+                    <option value="UK" selected>UK</option>
+                }
+                else
+                {
+                    <option value="UK">UK</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label>Leave Type:</label>
+            <select name="leaveType" class="form-control filter-input">
+                <option value="">-- All Leave Types --</option>
+                @if (ViewData["LeaveType"] as string == "Full Day")
+                {
+                    <option value="Full Day" selected>Full Day</option>
+                }
+                else
+                {
+                    <option value="Full Day">Full Day</option>
+                }
+
+                @if (ViewData["LeaveType"] as string == "Half Day")
+                {
+                    <option value="Half Day" selected>Half Day</option>
+                }
+                else
+                {
+                    <option value="Half Day">Half Day</option>
+                }
+
+                @if (ViewData["LeaveType"] as string == "Emergency Leave")
+                {
+                    <option value="Emergency Leave" selected>Emergency Leave</option>
+                }
+                else
+                {
+                    <option value="Emergency Leave">Emergency Leave</option>
+                }
+
+                @if (ViewData["LeaveType"] as string == "Planned")
+                {
+                    <option value="Planned" selected>Planned</option>
+                }
+                else
+                {
+                    <option value="Planned">Planned</option>
+                }
+
+                @if (ViewData["LeaveType"] as string == "Sick Leave")
+                {
+                    <option value="Sick Leave" selected>Sick Leave</option>
+                }
+                else
+                {
+                    <option value="Sick Leave">Sick Leave</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label>Date:</label>
+            <input type="date" name="searchDate" class="form-control filter-input" value="@ViewData["SearchDate"]" />
+        </div>
+        <div class="col-md-3">
+            <label>User:</label>
+            <input type="text" name="searchUser" class="form-control filter-input" placeholder="Search by username" value="@ViewData["SearchUser"]" />
+        </div>
+    </div>
+</form>
+
+
+<!-- Create Button -->
+<a asp-action="Create" class="btn btn-primary mt-3">Create</a>
+
+<!-- Table Section -->
+<table class="table table-bordered mt-4">
+    <thead>
+        <tr>
+            <th>Leave ID</th>
+            <th>User Name</th>
+            <th>Leave Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Start Time</th>
+
+            <th>End Time</th>
+            <th>Country</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="10" class="text-center">No records found.</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var leave in Model)
+            {
+                <tr>
+                    <td>@leave.LeaveId</td>
+                    <td>@leave.User?.FirstName   @leave.User?.LastName</td>
+                    <td>@leave.LeaveType</td>
+                    <td>@leave.StartDate?.ToShortDateString()</td>
+                    <td>@leave.EndDate?.ToShortDateString()</td>
+                    <td>@leave.StartTime?.ToString(@"hh\:mm")</td>
+                   
+                    <td>@leave.EndTime?.ToString(@"hh\:mm")</td>
+                    <td>@leave.CountryName</td>
+                    <td>@leave.Status</td>
+                    <td>
+                        @if (ViewData["UserRoles"] is IEnumerable<string> roles)
+                        {
+                            if (roles.Contains("Admin") || roles.Contains("Administrator"))
+                            {
+                                <!-- Accept and Reject Buttons -->
+                                <form asp-action="Accept" asp-route-id="@leave.LeaveId" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                </form>
+                                <form asp-action="Reject" asp-route-id="@leave.LeaveId" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            }
+                            else if (roles.Contains("Registered"))
+                            {
+                                <!-- Edit Button -->
+                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal-@leave.LeaveId">Edit</button>
+
+                                <!-- Delete Button -->
+                                <form asp-action="Delete" asp-route-id="@leave.LeaveId" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            }
+                        }
+                    </td>
+                </tr>
+                <!-- Edit Modal Implementation (Keep this as in your existing code) -->
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal-@leave.LeaveId" tabindex="-1" role="dialog" aria-labelledby="editModalLabel-@leave.LeaveId" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel-@leave.LeaveId">Edit Leave</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form asp-action="Edit" asp-route-id="@leave.LeaveId" method="post">
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="LeaveType">Leave Type</label>
+                                        <input type="text" class="form-control" name="LeaveType" value="@leave.LeaveType" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="StartDate">Start Date</label>
+                                        <input type="date" class="form-control" name="StartDate" value="@leave.StartDate?.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="EndDate">End Date</label>
+                                        <input type="date" class="form-control" name="EndDate" value="@leave.EndDate?.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="CountryName">Country</label>
+                                        <input type="text" class="form-control" name="CountryName" value="@leave.CountryName" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            }
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <!-- Required Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script to Automatically Submit Form on Filter Change -->
+    <script>
+        // Trigger form submit on filter change
+        document.querySelectorAll('.filter-input').forEach(input => {
+            input.addEventListener('change', () => {
+                document.getElementById('filterForm').submit();
+            });
+        });
+    </script>
+}

@@ -1,0 +1,120 @@
+﻿@model EyeMezzexz.Models.TaskModelRequest
+
+@{
+    ViewData["Title"] = "Create Task";
+}
+<style>
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.875rem;
+    }
+
+    .form-inline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+</style>
+
+<form asp-action="Create" method="post" class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label asp-for="CountryId" class="form-label">Country</label>
+        <select asp-for="CountryId" class="form-select" id="countrySelect" name="CountryId" required>
+            <option value="">[All]</option>
+            @foreach (var country in ViewBag.Countries)
+            {
+                <option value="@country.Value">@country.Text</option>
+            }
+        </select>
+        <div class="invalid-feedback">
+            Please select a country.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Name</label>
+        <input asp-for="Name" class="form-control" required />
+        <div class="invalid-feedback">
+            Please enter a name.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ParentTaskId" class="form-label">Parent Task</label>
+        <select asp-for="ParentTaskId" class="form-select">
+            <option value="">[None]</option>
+            @foreach (var task in ViewBag.Tasks)
+            {
+                <option value="@task.Value">@task.Text</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3" id="computerRequiredGroup" style="display: none;">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="ComputerRequired" name="ComputerRequired" value="true" />
+            <label class="form-check-label" for="ComputerRequired">Computer Required</label>
+        </div>
+    </div>
+    <div class="mb-3" id="targetQuantityGroup" style="display: none;">
+        <label asp-for="TargetQuantity" class="form-label">Target Quantity</label>
+        <input asp-for="TargetQuantity" class="form-control" id="TargetQuantity" type="number" min="1" />
+    </div>
+    <div class="mb-3">
+        <input type="submit" value="Create" class="btn btn-primary" />
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            'use strict'
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+
+        document.getElementById("countrySelect").addEventListener("change", function () {
+            var selectedCountry = this.options[this.selectedIndex].text;
+            var computerRequiredGroup = document.getElementById("computerRequiredGroup");
+            if (selectedCountry === "United Kingdom") {
+                computerRequiredGroup.style.display = "block";
+            } else {
+                computerRequiredGroup.style.display = "none";
+                document.getElementById("ComputerRequired").checked = false;
+                document.getElementById("targetQuantityGroup").style.display = "none";
+            }
+        });
+
+        // Show "Target Quantity" based on "Computer Required" checkbox
+        document.getElementById("ComputerRequired").addEventListener("change", function () {
+            var targetQuantityGroup = document.getElementById("targetQuantityGroup");
+
+            if (this.checked) {
+                targetQuantityGroup.style.display = "block";
+            } else {
+                targetQuantityGroup.style.display = "none";
+            }
+        });
+
+        // Trigger the change event on page load to handle pre-selected value
+        document.getElementById("countrySelect").dispatchEvent(new Event('change'));
+    </script>
+}

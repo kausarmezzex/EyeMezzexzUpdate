@@ -1,0 +1,150 @@
+﻿@model EyeMezzexz.Models.OfficeLeave
+
+@{
+    ViewData["Title"] = "Create Leave";
+}
+
+<style>
+    .card-header:first-child {
+        border-radius: calc(0.25rem - 1px) calc(2.25rem - 4px) 0 0 !important
+    }
+
+    .card-header{
+        border-radius: calc(0.25rem - 1px) calc(4.25rem - 1px) 0 0 !important;
+    }
+
+    .card{
+        border-radius: 2.25rem !important;
+    }
+</style>
+<div class="container mt-5">
+    <!-- Card Wrapper -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm border-2 rounded-4">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h3 class="mb-0">Create New Leave</h3>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+            <!-- Form -->
+            <form asp-action="Create" method="post" class="needs-validation" novalidate>
+                <div class="row g-4">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <!-- User Selection -->
+                        <div class="mb-3">
+                            <label for="UserId" class="form-label"><i class="fas fa-user"></i> User</label>
+                            <select asp-for="UserId" class="form-select" id="UserId">
+                                @foreach (var user in ViewBag.Users)
+                                {
+                                    <option value="@user.Id">@user.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Start Date -->
+                        <div class="mb-3">
+                            <label for="StartDate" class="form-label"><i class="fas fa-calendar-alt"></i> Start Date</label>
+                            <input type="date" asp-for="StartDate" class="form-control" id="StartDate" />
+                        </div>
+
+                        <!-- Start Time -->
+                        <div class="mb-3" id="startTimeSection" style="display: none;">
+                            <label for="StartTime" class="form-label"><i class="fas fa-clock"></i> Start Time</label>
+                            <input type="time" asp-for="StartTime" class="form-control" id="StartTime" />
+                        </div>
+                                <!-- Notes -->
+                                <div class="mb-3">
+                                    <label for="Notes" class="form-label"><i class="fas fa-sticky-note"></i> Notes</label>
+                                    <textarea asp-for="Notes" class="form-control" id="Notes" rows="1"></textarea>
+                                </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <!-- Country Selection -->
+                        <div class="mb-3">
+                            <label for="CountryName" class="form-label"><i class="fas fa-globe"></i> Country</label>
+                            <select id="CountryName" name="CountryName" asp-for="CountryName" class="form-select">
+                                <option value="">-- Select Country --</option>
+                                <option value="India">India</option>
+                                <option value="UK">UK</option>
+                            </select>
+                        </div>
+
+                                <!-- End Date -->
+                                <div class="mb-3">
+                                    <label for="EndDate" class="form-label"><i class="fas fa-calendar-alt"></i> End Date</label>
+                                    <input type="date" asp-for="EndDate" class="form-control" id="EndDate" />
+                                </div>
+                                <!-- End Time -->
+                                <div class="mb-3" id="endTimeSection" style="display: none;">
+                                    <label for="EndTime" class="form-label"><i class="fas fa-clock"></i> End Time</label>
+                                    <input type="time" asp-for="EndTime" class="form-control" id="EndTime" />
+                                </div>
+                        <!-- Leave Type -->
+                        <div class="mb-3">
+                            <label for="LeaveType" class="form-label"><i class="fas fa-clipboard-list"></i> Leave Type</label>
+                            <select id="LeaveType" name="LeaveType" asp-for="LeaveType" class="form-select">
+                                <option value="">-- Select Leave Type --</option>
+                            </select>
+                        </div>
+
+
+                       
+                    </div>
+                </div>
+                        
+                <!-- Submit and Back Buttons -->
+                <div class="mt-4">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<!-- Script for Country Change -->
+<script>
+    document.getElementById("CountryName").addEventListener("change", function () {
+        const country = this.value;
+        const leaveTypeDropdown = document.getElementById("LeaveType");
+        const startTimeSection = document.getElementById("startTimeSection");
+        const endTimeSection = document.getElementById("endTimeSection");
+
+        // Clear existing options in the Leave Type dropdown
+        leaveTypeDropdown.innerHTML = '<option value="">-- Select Leave Type --</option>';
+
+        // Define leave types for each country
+        const leaveTypes = {
+            "India": ["Full Day", "Half Day"],
+            "UK": ["Emergency Leave", "Planned", "Sick Leave"]
+        };
+
+        // Populate the Leave Type dropdown based on the selected country
+        if (leaveTypes[country]) {
+            leaveTypes[country].forEach(type => {
+                const option = document.createElement("option");
+                option.value = type;
+                option.textContent = type;
+                leaveTypeDropdown.appendChild(option);
+            });
+        }
+
+        // Show/hide time fields based on the selected country
+        if (country === "India") {
+            startTimeSection.style.display = "none";
+            endTimeSection.style.display = "none";
+        } else if (country === "UK") {
+            startTimeSection.style.display = "block";
+            endTimeSection.style.display = "block";
+        }
+    });
+</script>

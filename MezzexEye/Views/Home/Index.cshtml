@@ -1,0 +1,110 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <!-- Total Users Section -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+            <div class="inner">
+                <h3>@ViewBag.TotalUsers</h3> <!-- Display total users -->
+
+                <p>Total Users</p> <!-- Label for total users -->
+            </div>
+            <div class="icon">
+                <i class="ion ion-person"></i> <!-- User icon -->
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Administrator"))
+            {
+                <a asp-controller="Account" asp-action="AllUsers" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Link to All Users page -->
+                </a>
+            }
+            else
+            {
+                <a href="javascript:void(0);" class="small-box-footer" title="Access restricted to Admins only">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Disabled link -->
+                </a>
+            }
+        </div>
+    </div>
+    <!-- ./col -->
+    <!-- Total Running Tasks Section -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+            <div class="inner">
+                <h3>@ViewBag.TotalRunningTasks</h3> <!-- Display total running tasks -->
+
+                <p>Total Running Tasks</p> <!-- Label for total running tasks -->
+            </div>
+            <div class="icon">
+                <i class="ion ion-clipboard"></i> <!-- Task icon -->
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Administrator"))
+            {
+                <a asp-controller="DataForView" asp-action="ViewAllRunningTasks" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Link to All Running Tasks page -->
+                </a>
+            }
+            else
+            {
+                <a href="javascript:void(0);" class="small-box-footer" title="Access restricted to Admins only">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Disabled link -->
+                </a>
+            }
+        </div>
+    </div>
+    <!-- ./col -->
+    <!-- Total Users Not Started Task Section -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+            <div class="inner">
+                <h3>@ViewBag.UsersNotStartTask</h3> <!-- Display total users not started tasks -->
+
+                <p>Total Users Not Started Task</p> <!-- Label for users not started task -->
+            </div>
+            <div class="icon">
+                <i class="ion ion-person-add"></i> <!-- Task not started icon -->
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Administrator"))
+            {
+                <a asp-controller="DataForView" asp-action="ViewIncompleteTasks" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Link to View Incomplete Tasks page -->
+                </a>
+            }
+            else
+            {
+                <a href="javascript:void(0);" class="small-box-footer" title="Access restricted to Admins only">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Disabled link -->
+                </a>
+            }
+        </div>
+    </div>
+    <!-- ./col -->
+    <!-- New Section: Users Not Logged In Today -->
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>@ViewBag.UsersWithoutLogin</h3> <!-- Display total users not logged in today -->
+
+                <p>Users Not Logged In Today</p> <!-- Label for users not logged in today -->
+            </div>
+            <div class="icon">
+                <i class="ion ion-log-out"></i> <!-- Logout icon -->
+            </div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Administrator"))
+            {
+                <a asp-controller="DataForView" asp-action="UsersWithoutLogin" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Link to view details of users who haven't logged in -->
+                </a>
+            }
+            else
+            {
+                <a href="javascript:void(0);" class="small-box-footer" title="Access restricted to Admins only">
+                    More info <i class="fas fa-arrow-circle-right"></i> <!-- Disabled link -->
+                </a>
+            }
+        </div>
+    </div>
+    <!-- ./col -->
+</div>

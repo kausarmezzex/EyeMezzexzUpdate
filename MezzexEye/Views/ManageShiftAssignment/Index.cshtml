@@ -1,0 +1,194 @@
+﻿@model MezzexEye.ViewModel.ShiftAssignmentViewModel
+
+@{
+    ViewData["Title"] = "Manage Shift Assignments";
+}
+
+<style>
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.875rem;
+    }
+    /* Custom styling for the error messages */
+    .alert-danger {
+        font-size: 0.9rem;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+</style>
+
+<div class="container my-5">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div> <!-- Error messages will be shown here -->
+    <!-- Search Area -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row gy-3 gx-4 align-items-end">
+                <!-- Country Selection -->
+                <div class="col-md-3 col-sm-6">
+                    <label for="countrySelect" class="form-label">Select Country</label>
+                    <select id="countrySelect" asp-for="SelectedCountry" asp-items="Model.CountryList" class="form-select">
+                        <option value="">All Countries</option>
+                    </select>
+                </div>
+                <!-- Shift Selection -->
+                <div class="col-md-3 col-sm-6">
+                    <label for="shiftSelect" class="form-label">Search by Shift</label>
+                    <select id="shiftSelect" name="searchShiftId" class="form-select">
+                        <option value="">-- Select Shift --</option>
+                        @foreach (var shift in Model.Shifts)
+                        {
+                            if (shift.ShiftId == Model.SearchShiftId)
+                            {
+                                <option value="@shift.ShiftId" selected>@shift.ShiftName</option>
+                            }
+                            else
+                            {
+                                <option value="@shift.ShiftId">@shift.ShiftName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Username Search -->
+                <div class="col-md-3 col-sm-6">
+                    <label for="usernameSearch" class="form-label">Search by Username</label>
+                    <input type="text" id="usernameSearch" class="form-control" placeholder="Enter username" onkeyup="filterByUsername()" />
+                </div>
+
+                <div class="col-md-3 col-sm-6">
+                    <label for="weekNumberSelect" class="form-label">Select Week Number</label>
+                    <select id="weekNumberSelect" asp-for="SelectedWeekNumber" asp-items="Model.WeekNumbers" class="form-select">
+                    </select>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Shift Assignment Table -->
+    <form asp-action="SaveShiftAssignment" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <input type="hidden" name="AssignedDate" value="@Model.AssignedDate.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="SelectedWeekNumber" value="@Model.SelectedWeekNumber" />
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Day-wise Shift Assignments (Week: @Model.AssignedWeekDisplay)</h5>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Name</th>
+                            @{
+                                DateTime startDate = Model.AssignedDate;
+                                foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>())
+                                {
+                                    var currentDayDate = startDate.AddDays((int)day - (int)startDate.DayOfWeek);
+                                    var availableHours = Model.DayWiseAvailableHours.FirstOrDefault(d => d.Day == day)?.AvailableHours;
+
+                                    <th scope="col">
+                                        @day (@currentDayDate.ToString("dd")) <!-- Display day name and day number -->
+                                        <br />
+                                        @* Use an if condition to check the value *@
+                                        Avl Hours:
+                                        @if (availableHours.HasValue)
+                                        {
+                                            @availableHours.Value <!-- Show the value if it exists -->
+                                        }
+                                       else
+                        {
+                            @:0 
+                        }
+                                    </th>
+                                }
+                            }
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (int i = 0; i < Model.UserShiftAssignments.Count; i++)
+                        {
+                            var userAssignment = Model.UserShiftAssignments[i];
+                            <tr>
+                                <td class="align-middle">@userAssignment.UserName</td>
+                                <input type="hidden" name="UserShiftAssignments[@i].UserId" value="@userAssignment.UserId" />
+
+                                @for (int j = 0; j < userAssignment.DayWiseAssignments.Count; j++)
+                                {
+                                    var dayAssignment = userAssignment.DayWiseAssignments[j];
+                                    <td>
+                                        @if (Model.ShiftSelectList.Any())
+                                        {
+                                            <div class="d-flex flex-column">
+                                                @foreach (var shift in Model.ShiftSelectList)
+                                                {
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input"
+                                                               name="UserShiftAssignments[@i].DayWiseAssignments[@j].ShiftIds"
+                                                               value="@shift.Value"
+                                                        @(dayAssignment.ShiftIds.Contains(int.Parse(shift.Value)) ? "checked" : "")>
+                                                        <label class="form-check-label">@shift.Text</label>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span>No shifts available</span>
+                                        }
+
+                                        <input type="hidden" name="UserShiftAssignments[@i].DayWiseAssignments[@j].Day" value="@dayAssignment.Day" />
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">Save Shift Assignment</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript for Filtering Rows by Username -->
+<script>
+    function filterByUsername() {
+        // Get the input value and convert it to lowercase
+        var input = document.getElementById("usernameSearch").value.toLowerCase();
+
+        // Get the table and its rows
+        var table = document.querySelector(".table tbody");
+        var rows = table.getElementsByTagName("tr");
+
+        // Loop through the rows and hide those that don't match the input
+        for (var i = 0; i < rows.length; i++) {
+            var nameCell = rows[i].getElementsByTagName("td")[0]; // "Name" column is the first td
+
+            if (nameCell) {
+                var nameText = nameCell.textContent || nameCell.innerText;
+                rows[i].style.display = nameText.toLowerCase().includes(input) ? "" : "none";
+            }
+        }
+    }
+    document.getElementById("weekNumberSelect").addEventListener("change", function () {
+        this.form.submit();
+    });
+    document.getElementById("countrySelect").addEventListener("change", function () {
+        this.form.submit();
+    });
+
+    document.getElementById("shiftSelect").addEventListener("change", function () {
+        this.form.submit();
+    });
+</script>

@@ -1,0 +1,435 @@
+﻿   <!-- /.navbar -->
+        @using MezzexEye.Services
+        @inject IApiService _apiService
+
+@{
+    var email = User.Identity.Name;
+    var user = _apiService.GetUserByEmailAsync(email).Result;
+    var fullName = user != null ? $"{user.FirstName} {user.LastName}" : email;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mezzex Staff | Dashboard</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/Admin/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="~/Admin/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="~/Admin/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="~/Admin/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="~/Admin/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/Admin/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="~/Admin/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="~/Admin/plugins/summernote/summernote-bs4.min.css">
+
+    <!-- jQuery UI -->
+    <!-- CoreUI JS for enabling multi-select with search -->
+  
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    @RenderSection("Styles", required: false)
+    <style>
+        .brand-link, .user-panel .info a {
+            text-decoration: none;
+        }
+
+            .brand-link:hover, .user-panel .info a:hover {
+                text-decoration: none;
+            }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+        <!-- Preloader -->
+        <div class="preloader flex-column justify-content-center align-items-center">
+            <img class="animation__shake" src="~/Admin/dist/img/AdminLTELogo.png" alt="AdminLTELogo" height="60" width="60">
+        </div>
+
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav w-100">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="index3.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="#" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item ms-auto">
+                    <div class="d-flex flex-column flex-sm-row justify-content-end align-items-center gap-2">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <form asp-controller="Login" asp-action="Logout" method="post" class="d-flex">
+                                <button type="submit" class="btn btn-secondary">Log Out</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary" asp-area="" asp-controller="Login" asp-action="Index">Log In</a>
+                        } 
+                    </div>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="control-sidebar" data-controlsidebar-slide="true" href="#" role="button">
+                        <i class="fas fa-th-large"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+     
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="index3.html" class="brand-link">
+                <img src="~/Admin/dist/img/mezzex_logo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <span class="brand-text font-weight-light">Mezzex Staff</span>
+            </a>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user panel (optional) -->
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
+                    <div class="info">
+                        <!-- Use 'text-wrap' class to ensure text wraps to the next line if needed -->
+                        <span class="d-block text-white font-weight-bold text-wrap" style="word-break: break-word;">
+                            @fullName
+                        </span>
+                    </div>
+                </div>
+
+
+
+                <!-- Sidebar Menu -->
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <li class="nav-item">
+                            <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link active">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>Dashboard</p>
+                            </a>
+                        </li>
+
+                        @if (User.Identity.IsAuthenticated &&
+                        (User.IsInRole("Admin") || User.IsInRole("Administrator") || User.IsInRole("Registered")))
+                        {
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-desktop"></i>
+                                    <p>
+                                        Screen Captured
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="DataForView" asp-action="ViewScreenCaptureData" class="nav-link">
+                                            <i class="far fa-image nav-icon"></i>
+                                            <p>View Screen Capture</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>
+                                        Manage Tasks
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="DataForView" asp-action="TaskManagement" class="nav-link">
+                                            <i class="fas fa-clipboard-list nav-icon"></i>
+                                            <p>Showing Tasks</p>
+                                        </a>
+                                    </li>
+
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Administrator"))
+                                    {
+                                        <li class="nav-item">
+                                            <a asp-controller="DataForView" asp-action="ViewAllRunningTasks" class="nav-link">
+                                                <i class="fas fa-running nav-icon"></i>
+                                                <p>All Running Task</p>
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+
+                        @if (User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Administrator")))
+                        {
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-user-cog"></i>
+                                    <p>
+                                        Tasks
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="Task" asp-action="index" class="nav-link">
+                                            <i class="fas fa-tasks nav-icon"></i>
+                                            <p>All Tasks</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-users"></i>
+                                    <p>
+                                        Users
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="Account" asp-action="AllUsers" class="nav-link">
+                                            <i class="fas fa-user-friends nav-icon"></i>
+                                            <p>All Users</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>
+                                        Manage Team
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="DataForView" asp-action="TeamList" class="nav-link">
+                                            <i class="fas fa-list-alt nav-icon"></i>
+                                            <p>All Team</p>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a asp-controller="DataForView" asp-action="ViewAllTeamAssignments" class="nav-link">
+                                            <i class="fas fa-tasks nav-icon"></i>
+                                            <p>All Team Assignments</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>
+                                        Manage Assign Task
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="TaskManagement" asp-action="Index" class="nav-link">
+                                            <i class="fas fa-clipboard nav-icon"></i>
+                                            <p>All Assign Task</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-clock"></i>
+                                    <p>
+                                        Manage Shift
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="ManageShift" asp-action="Index" class="nav-link">
+                                            <i class="far fa-calendar-alt nav-icon"></i>
+                                            <p>All Shift</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon fas fa-desktop"></i>
+                                    <p>
+                                        Computer
+                                        <i class="right fas fa-angle-left"></i>
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="DataForView" asp-action="ComputerList" class="nav-link">
+                                            <i class="fas fa-laptop nav-icon"></i>
+                                            <p>All Computers</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <!-- Change the main icon here -->
+                                    <i class="nav-icon fas fa-users"></i> <!-- Changed from fa-desktop to fa-users for Staff Availability -->
+                                    <p>
+                                        Staff Availability
+                                        <i class="right fas fa-angle-left"></i> <!-- Keep as it is for dropdown arrow -->
+                                    </p>
+                                </a>
+                                <ul class="nav nav-treeview">
+                                    <li class="nav-item">
+                                        <a asp-controller="manageShiftAssignment" asp-action="Index" class="nav-link">
+                                            <!-- Change the sub-icon here -->
+                                            <i class="fas fa-calendar-alt nav-icon"></i> <!-- Changed from fa-laptop to fa-calendar-alt for Shift Assign -->
+                                            <p>Shift Assign</p>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                        }
+                    </ul>
+                </nav>
+
+
+
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0">@ViewData["Title"]</h1> <!-- This dynamically changes based on the page -->
+                        </div><!-- /.col -->
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                                <li class="breadcrumb-item active">@ViewData["Title"]</li> <!-- This updates the breadcrumb -->
+                            </ol>
+                        </div><!-- /.col -->
+                    </div><!-- /.row -->
+                </div><!-- /.container-fluid -->
+            </div>
+            <!-- /.content-header -->
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div><!-- /.container-fluid -->
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+
+        <footer class="main-footer">
+            <strong>Copyright&copy; 2024 - <a asp-area="" asp-controller="Home" asp-action="Index">Mezzex Eye</a>.</strong>
+            All rights reserved.
+            <div class="float-right d-none d-sm-inline-block"></div>
+        </footer>
+
+        <!-- Control Sidebar -->
+        <aside class="control-sidebar control-sidebar-dark"></aside>
+        <!-- /.control-sidebar -->
+    </div>
+    <!-- ./wrapper -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- jQuery UI for sortable functionality -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+   @*  <script src="~/Admin/plugins/jquery/jquery.min.js"></script> *@
+    <!-- jQuery UI 1.11.4 -->
+   @*   <script src="~/Admin/plugins/jquery-ui/jquery-ui.min.js"></script> *@
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+    <!-- Bootstrap 4 -->
+    <script src="~/Admin/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- ChartJS -->
+ @*    <script src="~/Admin/plugins/chart.js/Chart.min.js"></script> *@
+    <!-- Sparkline -->
+ @*    <script src="~/Admin/plugins/sparklines/sparkline.js"></script> *@
+    <!-- JQVMap -->
+   @*  <script src="~/Admin/plugins/jqvmap/jquery.vmap.min.js"></script> *@
+   @*  <script src="~/Admin/plugins/jqvmap/maps/jquery.vmap.usa.js"></script> *@
+    <!-- jQuery Knob Chart -->
+   @*  <script src="~/Admin/plugins/jquery-knob/jquery.knob.min.js"></script> *@
+    <!-- daterangepicker -->
+   @*  <script src="~/Admin/plugins/moment/moment.min.js"></script> *@
+   @*  <script src="~/Admin/plugins/daterangepicker/daterangepicker.js"></script> *@
+    <!-- Tempusdominus Bootstrap 4 -->
+  @*   <script src="~/Admin/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script> *@
+    <!-- Summernote -->
+   @*  <script src="~/Admin/plugins/summernote/summernote-bs4.min.js"></script> *@
+    <!-- overlayScrollbars -->
+   @*  <script src="~/Admin/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script> *@
+    <!-- DataTables -->
+   @*  <script src="~/Admin/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/Admin/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="~/Admin/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="~/Admin/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+    <script src="~/Admin/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="~/Admin/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script> *@
+  @*   <script src="~/Admin/plugins/jszip/jszip.min.js"></script> *@
+    @* <script src="~/Admin/plugins/pdfmake/pdfmake.min.js"></script> *@
+   @*  <script src="~/Admin/plugins/pdfmake/vfs_fonts.js"></script> *@
+   @*  <script src="~/Admin/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+    <script src="~/Admin/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+    <script src="~/Admin/plugins/datatables-buttons/js/buttons.colVis.min.js"></script> *@
+    <!-- AdminLTE App -->
+    <script src="~/Admin/dist/js/adminlte.js"></script>
+    <!-- AdminLTE for demo purposes -->
+   @*  <script src="~/Admin/dist/js/demo.js"></script> *@
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="~/Admin/dist/js/pages/dashboard.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

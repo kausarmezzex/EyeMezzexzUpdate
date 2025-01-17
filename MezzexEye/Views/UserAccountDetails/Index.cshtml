@@ -1,0 +1,36 @@
+﻿@* @model IEnumerable<EyeMezzexz.Models.UserAccountDetails>
+@{
+    ViewData["Title"] = "User Account Details";
+}
+
+<a asp-action="Create" class="btn btn-primary">Create New</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Company</th>
+            <th>Email</th>
+            <th>Country</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FirstName</td>
+                <td>@item.LastName</td>
+                <td>@item.CompanyName</td>
+                <td>@item.EmailId</td>
+                <td>@item.CountryId</td> <!-- Replace with a join if you want country name -->
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.AccountDetailsId" class="btn btn-warning">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.AccountDetailsId" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+ *@
