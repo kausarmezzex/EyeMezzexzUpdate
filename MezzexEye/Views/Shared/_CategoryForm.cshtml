@@ -1,0 +1,209 @@
+﻿@model MezzexEye.Controllers.CategoryViewModel
+
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
+
+<form id="categoryForm" asp-action="Save" method="post">
+    <div class="row align-items-end">
+
+
+        <!-- Computer Selection (Wider Column) -->
+        <div class="col-md-3">
+            <label for="computerDropdown" class="form-label">Computer</label>
+            <select id="computerDropdown" name="computerId" class="form-control">
+                @if (ViewBag.Computers != null)
+                {
+                    <option value="">Select Computer</option>
+                    @foreach (var computer in ViewBag.Computers)
+                    {
+                        <option value="@computer.Id">@computer.Name</option>
+                    }
+                }
+                else
+                {
+                    <option disabled>No Computers Available</option>
+                }
+            </select>
+        </div>
+
+        <!-- Category Multi-Selection (Wider Column) -->
+        <div class="col-md-4">
+            <label for="categoryDropdown" class="form-label">Category</label>
+            <select id="categoryDropdown" name="categoryIds" class="form-control select2" multiple>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.CategoryID">@category.Name</option>
+                }
+            </select>
+        </div>
+
+        <!-- Save Button (Smaller Column) -->
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="submit" class="btn btn-success w-100">Save</button>
+        </div>
+
+        <!-- Show Orders Button (Smaller Column) -->
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#computerOrderModal">
+                Computer Wise Order
+            </button>
+        </div>
+        <!-- Show Computer Category Assignments Button (Small Column) -->
+        <div class="col-md-2">
+            <button type="button" class="btn btn-warning w-100" style="color:black" id="showComputerCategoryAssignment">
+                Category Wise Order
+            </button>
+        </div>
+    </div>
+</form>
+
+
+
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="computerOrderModal" tabindex="-1" aria-labelledby="computerOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Total Orders Per Computer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Computer Name</th>
+                            <th>Total Orders (Categories)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Computers.Any())
+                        {
+                            int grandTotalOrders = 0;
+                            <!-- Variable to store total order count -->
+                            @foreach (var computer in Model.Computers)
+                            {
+                                grandTotalOrders += computer.TotalOrders;
+                                <!-- Add each computer's total orders -->
+
+                                <tr>
+                                    <td>@computer.ComputerName</td>
+                                    <td>
+                                        @computer.TotalOrders
+                                        (@string.Join(", ", computer.CategoryNames))
+                                    </td>
+                                </tr>
+                            }
+
+                            <!-- Row for displaying grand total -->
+                            <tr class="fw-bold">
+                                <td class="text-end">Total Order of All Categories:</td>
+                                <td>@grandTotalOrders</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center">No data available</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap Modal for Computer Category Assignment -->
+<div class="modal fade" id="computerCategoryAssignmentModal" tabindex="-1" aria-labelledby="computerCategoryAssignmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Category Wise Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Computer Name</th>
+                            <th>Assigned Categories (Total Orders)</th>
+                            <th>Assigned User</th>
+                        </tr>
+                    </thead>
+                    <tbody id="computerCategoryAssignmentTableBody">
+                        <!-- Data will be populated here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Select2 JS -->
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#categoryDropdown').select2({
+            placeholder: "Select Categories",  // Default placeholder
+            allowClear: true                   // Clear option enabled
+        });
+
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = {
+                computerId: $('#computerDropdown').val(),
+                categoryIds: $('#categoryDropdown').val()
+            };
+
+            $.ajax({
+                url: '@Url.Action("Save", "Category")',
+                type: 'POST',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert('An error occurred while saving the data.');
+                }
+            });
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('#showComputerCategoryAssignment').on('click', function () {
+            $.ajax({
+                url: '@Url.Action("GetComputerCategoryAssignments", "Category")',
+                type: 'GET',
+                success: function (response) {
+                    var tableBody = $('#computerCategoryAssignmentTableBody');
+                    tableBody.empty(); // Clear existing data
+
+                    if (response.success && response.data.length > 0) {
+                        response.data.forEach(function (item) {
+                            var row = `<tr>
+                                <td>${item.computerName}</td>
+                                <td>${item.categories.map(c => `${c.name} (${c.totalOrders})`).join(', ')}</td>
+                                <td>${item.assignedUser}</td>
+                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    } else {
+                        tableBody.append('<tr><td colspan="3" class="text-center">No data available</td></tr>');
+                    }
+
+                    $('#computerCategoryAssignmentModal').modal('show'); // Show the modal
+                },
+                error: function (xhr, status, error) {
+                    alert('An error occurred while fetching the data.');
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,375 @@
+﻿@model MezzexEye.Models.RotaViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Rota Management";
+}
+
+<!-- Filter Form -->
+<div class="mb-4">
+    <form id="filterForm" method="get" asp-action="Index" class="row g-3">
+        <!-- Year Selection Dropdown -->
+        <div class="col-md-2">
+            <label for="yearSelect" class="form-label">Select Year</label>
+            <select id="yearSelect" name="selectedYear" class="form-select" onchange="submitForm()">
+                @for (int year = DateTime.UtcNow.Year - 5; year <= DateTime.UtcNow.Year + 5; year++)
+                {
+                    @if (year == Model.SelectedYear)
+                    {
+                        <option value="@year" selected>@year</option>
+                    }
+                    else
+                    {
+                        <option value="@year">@year</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <!-- Month Selection Dropdown -->
+        <div class="col-md-2">
+            <label for="monthSelect" class="form-label">Select Month</label>
+            <select id="monthSelect" name="selectedMonth" class="form-select" onchange="submitForm()">
+                @for (int month = 1; month <= 12; month++)
+                {
+                    @if (month == Model.SelectedMonth)
+                    {
+                        <option value="@month" selected>@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)</option>
+                    }
+                    else
+                    {
+                        <option value="@month">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)</option>
+                    }
+                }
+            </select>
+        </div>
+
+        @* <!-- Day Selection Dropdown --> *@
+        @* <div class="col-md-2"> *@
+        @*     <label for="daySelect" class="form-label">Select Day</label> *@
+        @*     <select id="daySelect" name="selectedDay" class="form-select" onchange="submitForm()"> *@
+        @*         @for (int day = 1; day <= 31; day++) *@
+        @*         { *@
+        @*             @if (day == Model.SelectedDay) *@
+        @*             { *@
+        @*                 <option value="@day" selected>@day</option> *@
+        @*             } *@
+        @*             else *@
+        @*             { *@
+        @*                 <option value="@day">@day</option> *@
+        @*             } *@
+        @*         } *@
+        @*     </select> *@
+        @* </div> *@
+
+        <!-- Country Selection Dropdown -->
+        <div class="col-md-2">
+            <label for="countrySelect" class="form-label">Select Country</label>
+            <select id="countrySelect" name="selectedCountry" class="form-select" onchange="submitForm()">
+                @foreach (var country in Model.CountryList)
+                {
+                    @if (country.Value == Model.SelectedCountry)
+                    {
+                        <option value="@country.Value" selected>@country.Text</option>
+                    }
+                    else
+                    {
+                        <option value="@country.Value">@country.Text</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <!-- Week Selection Dropdown -->
+        <!-- Week Selection Dropdown -->
+        <div class="col-md-2">
+            <label for="weekNumber" class="form-label">Select Week</label>
+            <select id="weekNumber" name="selectedWeekNumber" class="form-select" onchange="submitForm()">
+                @for (int i = 1; i <= 52; i++)
+                {
+                    <option value="@i" selected="@(i == Model.WeekNumber)">Week @i</option>
+                }
+            </select>
+        </div>
+
+        <!-- Username Search -->
+        <div class="col-md-4">
+            <label for="searchUsername" class="form-label">Search by Username</label>
+            <input type="text" id="searchUsername" name="searchUsername" class="form-control"
+                   value="@Context.Request.Query["searchUsername"]" placeholder="Enter username"
+                   onkeypress="handleKeyPress(event)" />
+        </div>
+    </form>
+</div>
+
+<hr />
+
+<!-- Week Details -->
+<div class="mb-4" style="text-align:center">
+    <p class="small">Week @Model.WeekNumber: @Model.StartOfWeek.ToString("MMMM dd, yyyy") - @Model.EndOfWeek.ToString("MMMM dd, yyyy")</p>
+    <p class="small">Total Available Hours for the Week: @Model.TotalAvailableHoursForWeek.ToString("0.00") hours</p>
+</div>
+
+<!-- Rota Table -->
+<!-- Rota Table -->
+<div class="table-responsive" style="text-align:center">
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>User</th>
+                @{
+                    // Start the week from Monday
+                    var startOfWeek = Model.StartOfWeek;
+                    for (int i = 0; i < 7; i++)
+                    {
+                        var currentDay = startOfWeek.AddDays(i);
+                        <th>@currentDay.DayOfWeek (@currentDay.ToString("dd"))</th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody style="text-align:center">
+            @foreach (var userRota in Model.UserRotas)
+            {
+                <tr>
+                    <td>@userRota.UserName</td>
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        var currentDate = Model.StartOfWeek.AddDays(i);
+                        var dayRota = userRota.DayWiseRota[i];
+                        <td>
+                            @if (dayRota.IsOff)
+                            {
+                                <div style="text-align:center">
+                                    @if (!string.IsNullOrEmpty(dayRota.LeaveType) && dayRota.LeaveStatus == "Approved")
+                                    {
+                                        <span class="badge bg-warning small-leave">Leave @dayRota.LeaveStatus - @dayRota.LeaveType</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Off</span>
+                                    }
+                                </div>
+                            }
+                            else if (dayRota.ShiftName == "No Shift")
+                            {
+                                <div style="text-align:center">
+                                    <span class="badge bg-secondary">No Shift</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small" style="text-align:center">
+                                    <input type="text"
+                                           value="@dayRota.ShiftStartTime"
+                                           class="form-control-sm border-0 bg-transparent p-0 @(dayRota.ShiftStartTime == TimeSpan.Zero ? "zero-time" : "")"
+                                           style="width: 60px;"
+                                           data-user-id="@userRota.UserId"
+                                           data-date="@currentDate.ToString("yyyy-MM-dd")"
+                                           data-field="start"
+                                           data-original-value="@dayRota.ShiftStartTime"
+                                    @(dayRota.IsEditable ? "" : "readonly") />
+                                    -
+                                    <input type="text"
+                                           value="@dayRota.ShiftEndTime"
+                                           class="form-control-sm border-0 bg-transparent p-0 @(dayRota.ShiftEndTime == TimeSpan.Zero ? "zero-time" : "")"
+                                           style="width: 60px;"
+                                           data-user-id="@userRota.UserId"
+                                           data-date="@currentDate.ToString("yyyy-MM-dd")"
+                                           data-field="end"
+                                           data-original-value="@dayRota.ShiftEndTime"
+                                    @(dayRota.IsEditable ? "" : "readonly") />
+                                    @if (!string.IsNullOrEmpty(dayRota.LeaveType))
+                                    {
+                                        if (dayRota.LeaveStatus == "Pending")
+                                        {
+                                            <div class="small-leavetype">Leave @dayRota.LeaveStatus - @dayRota.LeaveType</div>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<!-- Save Rota Button -->
+<div class="text-center mt-4">
+    <button type="button" class="btn btn-primary" onclick="saveRota()">Save Rota</button>
+</div>
+
+<!-- JavaScript for Auto-Submit, Enter Key Handling, and Save Rota -->
+<!-- JavaScript for Auto-Submit, Enter Key Handling, and Save Rota -->
+@section Scripts {
+    <script>
+                $(document).ready(function () {
+            // Sync header and body column widths
+            function syncColumnWidths() {
+                var $table = $('.table-responsive');
+                var $headerCells = $table.find('thead th');
+                var $bodyCells = $table.find('tbody tr:first td');
+
+                $headerCells.each(function (index) {
+                    $(this).width($bodyCells.eq(index).width());
+                });
+            }
+
+            syncColumnWidths();
+            $(window).resize(syncColumnWidths);
+        });
+        function submitForm() {
+            document.getElementById("filterForm").submit();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitForm();
+            }
+        }
+
+        // Add event listener for "Enter" key press on input fields
+        $(document).ready(function () {
+            $('input[data-user-id]').on('keypress', function (e) {
+                if (e.which === 13) { // 13 is the key code for "Enter"
+                    e.preventDefault(); // Prevent form submission
+                    saveRota(); // Call the saveRota function
+                }
+            });
+        });
+
+        function saveRota() {
+            var rotaDetails = [];
+
+            $('input[data-user-id]').each(function () {
+                var userId = $(this).data('user-id');
+                var date = $(this).data('date');
+                var field = $(this).data('field');
+                var value = $(this).val();
+
+                // Get the original value from the data attribute
+                var originalValue = $(this).data('original-value');
+
+                // Find or create the rota detail object for this user and date
+                var rotaDetail = rotaDetails.find(function (detail) {
+                    return detail.UserId === userId && detail.RotaDate === date;
+                });
+
+                if (!rotaDetail) {
+                    rotaDetail = {
+                        UserId: userId,
+                        RotaDate: date,
+                        ShiftStartTime: '',
+                        ShiftEndTime: ''
+                    };
+                    rotaDetails.push(rotaDetail);
+                }
+
+                // Update the appropriate field
+                if (field === "start") {
+                    rotaDetail.ShiftStartTime = value;
+                } else if (field === "end") {
+                    rotaDetail.ShiftEndTime = value;
+                }
+
+                // Check if the value has changed
+                if (value !== originalValue) {
+                    rotaDetail.HasChanged = true;
+                }
+            });
+
+            // Filter out the rota details that haven't changed
+            rotaDetails = rotaDetails.filter(function (detail) {
+                return detail.HasChanged;
+            });
+
+            if (rotaDetails.length === 0) {
+                alert("No changes detected");
+                return;
+            }
+
+            console.log(rotaDetails);
+            $.ajax({
+                url: '/Rota/SaveRota',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(rotaDetails),
+                success: function (response) {
+                    if (response.success) {
+                        alert("Saved successfully");
+                        location.reload();
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                },
+                error: function (xhr) {
+                    alert("Failed to save: " + xhr.responseText);
+                }
+            });
+        }
+    </script>
+}
+
+<!-- Add some custom CSS for better design -->
+<style>
+    .zero-time {
+        color: #4743e2; /* Change the color as per your requirement */
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #dee2e6;
+    }
+
+    .table-light th {
+        background-color: #f8f9fa;
+    }
+
+    .form-control {
+        margin-bottom: 5px;
+    }
+
+    .badge {
+        font-size: 0.9em;
+    }
+
+    .small {
+        font-size: 0.95rem;
+    }
+
+    .small-leave {
+        font-size: 0.85rem;
+    }
+
+    .form-control-sm {
+        padding: 0.15rem 0.3rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .small-leavetype {
+        font-size: 0.75rem;
+        color: firebrick;
+    }
+    /* Fixed Header CSS */
+    .table-responsive {
+        position: relative;
+        overflow: auto;
+        max-height: 600px; /* Adjust height as needed */
+    }
+
+        .table-responsive thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa; /* Match the table header background color */
+            z-index: 1; /* Ensure the header stays above the body */
+        }
+
+        .table-responsive tbody {
+            overflow-y: auto;
+        }
+</style>

@@ -1,0 +1,75 @@
+﻿@using Newtonsoft.Json
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    var session = HttpContextAccessor.HttpContext.Session;
+    var message = session.GetString("NotificationMessage");
+    var type = session.GetString("NotificationType");
+
+    if (!string.IsNullOrEmpty(message) && !string.IsNullOrEmpty(type))
+    {
+        <div id="notification" class="alert alert-@type alert-dismissible fade show" role="alert">
+            @message
+        </div>
+    }
+}
+
+<style>
+    /* Notification Styles */
+    #notification {
+        position: fixed;
+        top: 30px;
+        right: 20px;
+        z-index: 1050;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+
+    .alert-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #664d03;
+    }
+
+    .alert-info {
+        background-color: #cff4fc;
+        color: #055160;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const notification = document.getElementById("notification");
+        if (notification) {
+            setTimeout(() => {
+                notification.classList.remove("show");
+                notification.classList.add("fade");
+
+                setTimeout(() => {
+                    notification.style.display = "none";
+                    // AJAX request to clear session after notification is hidden
+                    fetch('/Notification/ClearNotification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(response => {
+                        if (!response.ok) {
+                            console.error("Failed to clear session notification");
+                        }
+                    }).catch(error => console.error(error));
+                }, 500);
+            }, 5000);
+        }
+    });
+</script>

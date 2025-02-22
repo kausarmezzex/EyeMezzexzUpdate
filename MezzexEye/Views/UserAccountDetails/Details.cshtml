@@ -1,0 +1,92 @@
+﻿@model EyeMezzexz.Models.UserAccountDetail
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h2>User Account Details</h2>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>User Information</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">First Name</dt>
+            <dd class="col-sm-9">@Model.ApplicationUser?.FirstName</dd>
+
+            <dt class="col-sm-3">Last Name</dt>
+            <dd class="col-sm-9">@Model.ApplicationUser?.LastName</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.ApplicationUser?.Email</dd>
+
+            <dt class="col-sm-3">Phone Number</dt>
+            <dd class="col-sm-9">@Model.ApplicationUser?.PhoneNumber</dd>
+
+            <dt class="col-sm-3">Country</dt>
+            <dd class="col-sm-9">@Model.ApplicationUser?.CountryName</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-secondary text-white">
+        <h4>Account Details</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Company Name</dt>
+            <dd class="col-sm-9">@Model.CompanyName</dd>
+
+            <dt class="col-sm-3">Payroll Number</dt>
+            <dd class="col-sm-9">@Model.PayrollNumber</dd>
+
+            <dt class="col-sm-3">Employee Code</dt>
+            <dd class="col-sm-9">@Model.EmployeeCode</dd>
+
+            <dt class="col-sm-3">Agreement Type</dt>
+            <dd class="col-sm-9">@Model.AgreementType</dd>
+
+            <dt class="col-sm-3">Joining Date</dt>
+            <dd class="col-sm-9">@Model.JoiningDate?.ToString("yyyy-MM-dd")</dd>
+
+            <dt class="col-sm-3">Is Manager</dt>
+            <dd class="col-sm-9">@((Model.IsManager) ? "Yes" : "No")</dd>
+
+            <dt class="col-sm-3">Fixed Salary</dt>
+            <dd class="col-sm-9">@((Model.IsFixedSalary) ? $"Yes (${Model.FixedSalaryAmount})" : "No")</dd>
+            <dt class="col-sm-3">HolidayDays Yearly</dt>
+            <dd class="col-sm-9">@(Model.YearlyLeave) </dd>
+            <dt class="col-sm-3">HolidayHours Yearly</dt>
+            <dd class="col-sm-9">@(Model.YearlyLeaveHours) </dd>
+            <dt class="col-sm-3">Address</dt>
+            <dd class="col-sm-9">@Model.Address</dd>
+
+            <dt class="col-sm-3">Zipcode</dt>
+            <dd class="col-sm-9">@Model.Zipcode</dd>
+
+            <dt class="col-sm-3">Documents</dt>
+            @* <dd class="col-sm-9"> *@
+            @*     @if (Model.DocumentNames != null && Model.DocumentNames.Any()) *@
+            @*     { *@
+            @*         <ul> *@
+            @*             @for (int i = 0; i < Model.DocumentNames.Count; i++) *@
+            @*             { *@
+            @*                 <li> *@
+            @*                     <strong>@Model.DocumentNames[i]</strong> *@
+            @*                     <a href="@Model.FilePath?.Split(";")[i]" target="_blank">View Document</a> *@
+            @*                 </li> *@
+            @*             } *@
+            @*         </ul> *@
+            @*     } *@ 
+            @*     else *@
+            @*     { *@
+            @*         <span>No documents available</span> *@
+            @*     } *@
+            @* </dd> *@
+        </dl>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-primary mt-4">Back to List</a>
